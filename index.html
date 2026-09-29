@@ -392,8 +392,10 @@
   .bc-h{padding:14px 16px 10px}
   .bc-h b{display:block;font-family:var(--serif);font-size:17px;margin-bottom:2px}
   .bc-h small{font-family:var(--mono);color:var(--muted);font-size:12.5px}
-  .bc-body{max-height:560px;overflow:auto}
-  .bcard table{width:100%;border-collapse:collapse;font-size:14px}
+  .bc-body{max-height:560px;overflow-y:auto;overflow-x:hidden}
+  .bcard table{width:100%;min-width:0;table-layout:auto;border-collapse:collapse;font-size:14px}
+  .bcard td,.bcard th{white-space:normal;overflow-wrap:anywhere}
+  .bcard td.num,.bcard th.num{white-space:nowrap;width:1%}
   .bcard th{position:sticky;top:0;background:var(--surface-2);color:var(--muted);font-size:12px;font-weight:500;text-align:left;padding:8px 16px;border-top:1px solid var(--border);border-bottom:1px solid var(--border)}
   .bcard td:first-child{padding-right:28px}
   .bcard td{padding:8px 16px;border-bottom:1px solid var(--border)}
@@ -626,7 +628,7 @@
     <div id="detailSections"></div>
   </div>
 
-  <footer>Kategori dihitung otomatis dari Tgl. Jatuh Tempo setiap kali halaman ini dibuka &mdash; angka &ldquo;Hari&rdquo; selalu mengikuti tanggal hari ini.<br>Versi build: 2026-09-29-v12 (kartu ringkasan: judul cabang, subjudul unit + bulan)</footer>
+  <footer>Kategori dihitung otomatis dari Tgl. Jatuh Tempo setiap kali halaman ini dibuka &mdash; angka &ldquo;Hari&rdquo; selalu mengikuti tanggal hari ini.<br>Versi build: 2026-09-29-v13 (kartu ringkasan tanpa scroll samping)</footer>
 </div>
 
 <script>
