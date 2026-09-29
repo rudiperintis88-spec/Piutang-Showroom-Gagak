@@ -387,15 +387,16 @@
   .tri-head{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin:6px 0 14px}
   .tri-head h2{font-family:var(--serif);font-size:20px;margin:0}
   .tri-head span{color:var(--muted);font-size:13px}
-  .tri{display:grid;grid-template-columns:repeat(auto-fit,minmax(310px,1fr));gap:18px;align-items:start}
-  .bcard{background:var(--surface);border:1px solid var(--border);border-top:3px solid var(--c);border-radius:14px;overflow:hidden}
-  .bc-h{padding:16px 18px 12px}
+  .tri{display:flex;flex-wrap:wrap;gap:16px;align-items:flex-start}
+  .bcard{background:var(--surface);border:1px solid var(--border);border-top:3px solid var(--c);border-radius:14px;overflow:hidden;flex:0 1 auto;min-width:210px;max-width:min(100%,440px)}
+  .bc-h{padding:14px 16px 10px}
   .bc-h b{display:block;font-family:var(--serif);font-size:18px}
   .bc-h small{font-family:var(--mono);color:var(--muted);font-size:12.5px}
   .bc-body{max-height:560px;overflow:auto}
   .bcard table{width:100%;border-collapse:collapse;font-size:14px}
-  .bcard th{position:sticky;top:0;background:var(--surface-2);color:var(--muted);font-size:12px;font-weight:500;text-align:left;padding:9px 18px;border-top:1px solid var(--border);border-bottom:1px solid var(--border)}
-  .bcard td{padding:10px 18px;border-bottom:1px solid var(--border)}
+  .bcard th{position:sticky;top:0;background:var(--surface-2);color:var(--muted);font-size:12px;font-weight:500;text-align:left;padding:8px 16px;border-top:1px solid var(--border);border-bottom:1px solid var(--border)}
+  .bcard td:first-child{padding-right:28px}
+  .bcard td{padding:8px 16px;border-bottom:1px solid var(--border)}
   .bcard .num{text-align:right;font-family:var(--mono)}
   .bcard tfoot td{font-weight:700;border-bottom:0;position:sticky;bottom:0;background:var(--surface)}
   .bcard td.z{color:var(--faint)}
@@ -443,6 +444,12 @@
   .pr-arch-h span{color:var(--muted);font-weight:400}
   .pr-arch-i{padding:12px 18px;border-top:1px solid var(--border)}
   .pr-arch-i small{color:var(--muted)}
+
+  .tri-bar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:0 0 14px}
+  .tri-chips{display:flex;gap:6px;flex-wrap:wrap}
+  .tri-chip{border:1px solid var(--border);background:var(--surface);color:var(--muted);border-radius:999px;padding:6px 13px;font:inherit;font-size:13px;cursor:pointer}
+  .tri-chip.on{background:var(--ink);color:var(--surface);border-color:var(--ink)}
+  .tri-none{color:var(--muted);padding:10px 0}
 </style>
 </head>
 <body>
@@ -619,7 +626,7 @@
     <div id="detailSections"></div>
   </div>
 
-  <footer>Kategori dihitung otomatis dari Tgl. Jatuh Tempo setiap kali halaman ini dibuka &mdash; angka &ldquo;Hari&rdquo; selalu mengikuti tanggal hari ini.<br>Versi build: 2026-09-29-v10 (Prioritas Penagihan di Follow-up Leasing + riwayat catatan/tugas)</footer>
+  <footer>Kategori dihitung otomatis dari Tgl. Jatuh Tempo setiap kali halaman ini dibuka &mdash; angka &ldquo;Hari&rdquo; selalu mengikuti tanggal hari ini.<br>Versi build: 2026-09-29-v11 (menu rentang & pilihan bulan di kartu ringkasan)</footer>
 </div>
 
 <script>
@@ -1217,10 +1224,36 @@ const monName = (m, full) => { const n = BLN[+m.slice(5) - 1]; return full ? n :
 function periodLabel() { const M = months(); return monName(M[0]) + '\u2013' + monName(M[2]) + ' ' + M[2].slice(0, 4); }
 const inPeriod = r => months().includes((r.tanggal || '').slice(0, 7));
 
+function monthsN(n) {
+  const a = [];
+  for (let i = n - 1; i >= 0; i--) {
+    const d = new Date(today.getFullYear(), today.getMonth() - i, 1);
+    a.push(d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0'));
+  }
+  return a;
+}
+const triState = {}, triDefs = {};
+const shortMon = m => monName(m) + ' ' + m.slice(2, 4);
+function rangeLabel(M, sel) {
+  if (!sel.length) return 'belum ada bulan dipilih';
+  if (sel.length === 1) return monName(sel[0], true) + ' ' + sel[0].slice(0, 4);
+  const idx = sel.map(m => M.indexOf(m));
+  if (idx.every((v, i) => i === 0 || v === idx[i - 1] + 1)) {
+    const a = sel[0], z = sel[sel.length - 1];
+    return monName(a) + (a.slice(0, 4) !== z.slice(0, 4) ? ' ' + a.slice(0, 4) : '') + '\u2013' + monName(z) + ' ' + z.slice(0, 4);
+  }
+  return sel.map(shortMon).join(', ');
+}
+
 function renderTri(elId, title, keyFn, colLabel) {
+  triDefs[elId] = [title, keyFn, colLabel];
+  const st = triState[elId] || (triState[elId] = { n: 3, off: new Set() });
+  const M = monthsN(st.n), sel = M.filter(m => !st.off.has(m));
   const col = (CAB.find(c => c[0] === TARGET_DIVISI) || [0, '#2F4FD0'])[1];
-  let h = `<div class="tri-head"><h2>${title}</h2><span>${periodLabel()}</span><span>&middot; ${TARGET_DIVISI}</span></div><div class="tri">`;
-  months().forEach(m => {
+  let h = `<div class="tri-head"><h2>${title}</h2><span>${rangeLabel(M, sel)}</span><span>&middot; ${TARGET_DIVISI}</span></div>
+    <div class="tri-bar"><select class="select-filter" data-e="${elId}" title="Rentang bulan">${[3, 6].map(n => `<option value="${n}"${n === st.n ? ' selected' : ''}>${n} bulan berjalan</option>`).join('')}</select>
+    <div class="tri-chips"><button type="button" class="tri-chip${st.off.size ? '' : ' on'}" data-m="*">Semua</button>${M.map(m => `<button type="button" class="tri-chip${st.off.has(m) ? '' : ' on'}" data-m="${m}">${shortMon(m)}</button>`).join('')}</div></div><div class="tri">`;
+  sel.forEach(m => {
     const items = SALES.filter(r => r.divisi === TARGET_DIVISI && r.tanggal.slice(0, 7) === m);
     const map = new Map();
     items.forEach(r => { const k = keyFn(r) || '-'; map.set(k, (map.get(k) || 0) + 1); });
@@ -1233,8 +1266,25 @@ function renderTri(elId, title, keyFn, colLabel) {
         <tfoot><tr><td>Total</td><td class="num">${items.length}</td></tr></tfoot>
       </table></div></div>`;
   });
+  if (!sel.length) h += '<p class="tri-none">Pilih minimal satu bulan.</p>';
   $(elId).innerHTML = h + '</div>';
 }
+['triLeasing', 'triAsuransi', 'triSupervisor', 'triSales'].forEach(id => {
+  const box = $(id);
+  box.addEventListener('change', e => {
+    const s = e.target.closest('select[data-e]');
+    if (!s) return;
+    triState[id] = { n: +s.value, off: new Set() };
+    renderTri(id, ...triDefs[id]);
+  });
+  box.addEventListener('click', e => {
+    const b = e.target.closest('.tri-chip');
+    if (!b) return;
+    const st = triState[id], m = b.dataset.m;
+    if (m === '*') st.off = new Set(); else if (st.off.has(m)) st.off.delete(m); else st.off.add(m);
+    renderTri(id, ...triDefs[id]);
+  });
+});
 
 const dS = { k: 'tanggal', d: -1 };
 const dCol = new Set();
@@ -1308,7 +1358,7 @@ function normDate(v) {
   if (/^\d{4}-\d{2}-\d{2}/.test(s)) return s.slice(0, 10);
   return null;
 }
-// Kolom: B=Tanggal C=Fakturno D=Nama F=Namabrg H=Cara J=Divisi K=Status Fnc(Leasing) L=Salesman M=Supervisor N=Salesman S=Asuransi
+// Kolom: B=Tanggal C=Fakturno D=Nama F=Namabrg H=Cara J=Divisi K=Status Fnc(Leasing) L=Salesman(sales) M=Supervisor S=Asuransi
 function mapSales(start, end, get) {
   const nm = v => { v = v == null ? '' : String(v); return (v.includes('=') ? v.slice(v.indexOf('=') + 1) : v).trim(); };
   const out = [], seen = new Set();
@@ -1319,7 +1369,7 @@ function mapSales(start, end, get) {
     const asu = get(r, 18);
     out.push({
       tanggal: tgl, faktur: get(r, 2), nama: String(nama).trim(), namabrg: get(r, 5), cara: get(r, 7), divisi,
-      leasing: get(r, 10) || '-', salesman: nm(get(r, 13) || get(r, 11)), supervisor: get(r, 12) || '-',
+      leasing: get(r, 10) || '-', salesman: nm(get(r, 11)) || '-', supervisor: String(get(r, 12) || '-').trim(),
       asuransi: (!asu || asu === '-') ? 'NON ASURANSI' : String(asu).trim(),
     });
   }
