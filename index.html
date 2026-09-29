@@ -237,7 +237,7 @@
     overflow-x: auto; border: 1px solid var(--border); border-top: none;
     border-radius: 0 0 var(--radius) var(--radius); background: var(--surface);
   }
-  table.detail { border-collapse: collapse; width: 100%; min-width: 900px; }
+  table.detail { border-collapse: collapse; width: 100%; min-width: 980px; }
   table.detail thead th {
     background: var(--surface-2); text-align: left; font-weight: 500;
     color: var(--muted); font-size: 12px; padding: 9px 12px;
@@ -421,6 +421,7 @@
     <button class="tab" data-tab="prioritas">Prioritas Penagihan</button>
     <button class="tab" data-tab="penjualanleasing">Penjualan per Leasing</button>
     <button class="tab" data-tab="penjualanasuransi">Penjualan per Insurance Company</button>
+    <button class="tab" data-tab="penjualansupervisor">Penjualan per Supervisor</button>
   </div>
 
   <div class="tabpanel" id="tabpanel-umur">
@@ -559,7 +560,13 @@
     <div id="penjualanAsuransiSections"></div>
   </div>
 
-  <footer>Kategori dihitung otomatis dari Tgl. Jatuh Tempo setiap kali halaman ini dibuka &mdash; angka &ldquo;Hari&rdquo; selalu mengikuti tanggal hari ini.<br>Versi build: 2026-09-26-v5 (+ Prioritas Penagihan, Penjualan per Leasing/Insurance)</footer>
+  <div class="tabpanel" id="tabpanel-penjualansupervisor" hidden>
+    <div class="summary-card" id="summaryCardSupervisor"></div>
+    <p class="subtitle">Rincian per debitur, dikelompokkan per Supervisor.</p>
+    <div id="penjualanSupervisorSections"></div>
+  </div>
+
+  <footer>Kategori dihitung otomatis dari Tgl. Jatuh Tempo setiap kali halaman ini dibuka &mdash; angka &ldquo;Hari&rdquo; selalu mengikuti tanggal hari ini.<br>Versi build: 2026-09-26-v6 (+ Penjualan per Supervisor)</footer>
 </div>
 
 <script>
@@ -863,6 +870,7 @@ document.querySelectorAll('.tab').forEach(btn => {
     document.getElementById('tabpanel-prioritas').hidden = target !== 'prioritas';
     document.getElementById('tabpanel-penjualanleasing').hidden = target !== 'penjualanleasing';
     document.getElementById('tabpanel-penjualanasuransi').hidden = target !== 'penjualanasuransi';
+    document.getElementById('tabpanel-penjualansupervisor').hidden = target !== 'penjualansupervisor';
   });
 });
 
@@ -1143,12 +1151,19 @@ function renderPenjualanAsuransiTab() {
   renderSalesSections('penjualanAsuransiSections', groups, [{ key: 'leasing', label: 'Leasing' }]);
 }
 
+function renderPenjualanSupervisorTab() {
+  const groups = groupSales(r => r.supervisor || "-");
+  renderSummaryCard('summaryCardSupervisor', TARGET_DIVISI, groups);
+  renderSalesSections('penjualanSupervisorSections', groups, [{ key: 'leasing', label: 'Leasing' }]);
+}
+
 render();
 renderLeasingTab();
 renderFollowupTab();
 renderPrioritasTab();
 renderPenjualanLeasingTab();
 renderPenjualanAsuransiTab();
+renderPenjualanSupervisorTab();
 document.getElementById('sourceCount').textContent = rows.length;
 
 /* ================= Live sync dari Google Sheet (tiap 30 detik) ================= */
