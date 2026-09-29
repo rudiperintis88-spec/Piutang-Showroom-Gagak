@@ -388,9 +388,9 @@
   .tri-head h2{font-family:var(--serif);font-size:20px;margin:0}
   .tri-head span{color:var(--muted);font-size:13px}
   .tri{display:flex;flex-wrap:wrap;gap:16px;align-items:flex-start}
-  .bcard{background:var(--surface);border:1px solid var(--border);border-top:3px solid var(--c);border-radius:14px;overflow:hidden;flex:0 1 auto;min-width:210px;max-width:min(100%,440px)}
+  .bcard{background:var(--surface);border:1px solid var(--border);border-top:3px solid var(--c);border-radius:14px;overflow:hidden;flex:0 1 300px;min-width:0;max-width:100%}
   .bc-h{padding:14px 16px 10px}
-  .bc-h b{display:block;font-family:var(--serif);font-size:18px}
+  .bc-h b{display:block;font-family:var(--serif);font-size:17px;margin-bottom:2px}
   .bc-h small{font-family:var(--mono);color:var(--muted);font-size:12.5px}
   .bc-body{max-height:560px;overflow:auto}
   .bcard table{width:100%;border-collapse:collapse;font-size:14px}
@@ -626,7 +626,7 @@
     <div id="detailSections"></div>
   </div>
 
-  <footer>Kategori dihitung otomatis dari Tgl. Jatuh Tempo setiap kali halaman ini dibuka &mdash; angka &ldquo;Hari&rdquo; selalu mengikuti tanggal hari ini.<br>Versi build: 2026-09-29-v11 (menu rentang & pilihan bulan di kartu ringkasan)</footer>
+  <footer>Kategori dihitung otomatis dari Tgl. Jatuh Tempo setiap kali halaman ini dibuka &mdash; angka &ldquo;Hari&rdquo; selalu mengikuti tanggal hari ini.<br>Versi build: 2026-09-29-v12 (kartu ringkasan: judul cabang, subjudul unit + bulan)</footer>
 </div>
 
 <script>
@@ -1259,7 +1259,7 @@ function renderTri(elId, title, keyFn, colLabel) {
     items.forEach(r => { const k = keyFn(r) || '-'; map.set(k, (map.get(k) || 0) + 1); });
     const rows = [...map.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
     h += `<div class="bcard" style="--c:${col}">
-      <div class="bc-h"><b>${monName(m, true)} ${m.slice(0, 4)}</b><small>${items.length} unit &middot; ${TARGET_DIVISI}</small></div>
+      <div class="bc-h"><b>${TARGET_DIVISI}</b><small>${items.length} unit &middot; ${monName(m, true)} ${m.slice(0, 4)}</small></div>
       <div class="bc-body"><table>
         <thead><tr><th>${colLabel}</th><th class="num">Unit</th></tr></thead>
         <tbody>${rows.map(([k, n]) => `<tr><td>${esc(k === 'Cash' ? 'Cash (Tunai)' : k)}</td><td class="num">${n}</td></tr>`).join('') || '<tr><td colspan="2" class="z">Belum ada data</td></tr>'}</tbody>
