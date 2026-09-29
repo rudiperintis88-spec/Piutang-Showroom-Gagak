@@ -186,6 +186,24 @@
   .catatan-saved { color: #2E9E5B; font-size: 11px; margin-left: 4px; opacity: 0; transition: opacity .3s ease; }
   .catatan-saved.show { opacity: 1; }
 
+  .summary-card {
+    border: 1px solid var(--border); border-top: 3px solid var(--ink);
+    border-radius: var(--radius); background: var(--surface);
+    padding: 18px 22px; margin-bottom: 26px; max-width: 420px;
+  }
+  .summary-card .sc-title { margin: 0; font-family: var(--serif); font-weight: 700; font-size: 19px; color: var(--ink); }
+  .summary-card .sc-subtitle { margin: 4px 0 14px; color: var(--muted); font-size: 13px; font-family: var(--mono); }
+  .summary-card table { width: 100%; border-collapse: collapse; }
+  .summary-card thead th {
+    text-align: left; font-size: 11.5px; color: var(--muted); font-weight: 500;
+    padding: 6px 0; border-bottom: 1px solid var(--border);
+  }
+  .summary-card thead th.num { text-align: right; }
+  .summary-card tbody td { padding: 7px 0; font-size: 14px; color: var(--ink); border-bottom: 1px solid var(--border); }
+  .summary-card tbody td.num { text-align: right; font-variant-numeric: tabular-nums; }
+  .summary-card tfoot td { padding: 9px 0 2px; font-weight: 700; font-size: 14px; color: var(--ink); }
+  .summary-card tfoot td.num { text-align: right; font-variant-numeric: tabular-nums; }
+
   .matrix-wrap {
     overflow-x: auto; border: 1px solid var(--border); border-radius: var(--radius);
     background: var(--surface); margin-bottom: 28px;
@@ -530,12 +548,14 @@
   </div>
 
   <div class="tabpanel" id="tabpanel-penjualanleasing" hidden>
-    <p class="subtitle">Penjualan bulan berjalan, dikelompokkan per Leasing.</p>
+    <div class="summary-card" id="summaryCardLeasing"></div>
+    <p class="subtitle">Rincian per debitur, dikelompokkan per Leasing.</p>
     <div id="penjualanLeasingSections"></div>
   </div>
 
   <div class="tabpanel" id="tabpanel-penjualanasuransi" hidden>
-    <p class="subtitle">Penjualan bulan berjalan, dikelompokkan per Insurance Company.</p>
+    <div class="summary-card" id="summaryCardAsuransi"></div>
+    <p class="subtitle">Rincian per debitur, dikelompokkan per Insurance Company.</p>
     <div id="penjualanAsuransiSections"></div>
   </div>
 
@@ -1087,13 +1107,39 @@ function renderSalesSections(containerId, groups, extraCols) {
   });
 }
 
+const BULAN_FULL_ID = ["Januari","Februari","Maret","April","Mei","Juni","Juli","Agustus","September","Oktober","November","Desember"];
+
+function currentMonthLabel() {
+  const d = parseDate(SALES_RAW[0] && SALES_RAW[0].tanggal) || new Date();
+  return `${BULAN_FULL_ID[d.getMonth()]} ${d.getFullYear()}`;
+}
+
+function renderSummaryCard(elId, cardTitle, groups) {
+  const el = document.getElementById(elId);
+  const total = groups.reduce((s, [, items]) => s + items.length, 0);
+  const rowsHtml = groups.map(([name, items]) => {
+    const label = name === 'Cash' ? 'Cash (Tunai)' : name;
+    return `<tr><td>${label}</td><td class="num">${items.length}</td></tr>`;
+  }).join('');
+  el.innerHTML = `
+    <p class="sc-title">${cardTitle}</p>
+    <p class="sc-subtitle">${total} unit &middot; ${currentMonthLabel()}</p>
+    <table>
+      <thead><tr><th>Leasing / Metode</th><th class="num">Unit</th></tr></thead>
+      <tbody>${rowsHtml}</tbody>
+      <tfoot><tr><td>Total</td><td class="num">${total}</td></tr></tfoot>
+    </table>`;
+}
+
 function renderPenjualanLeasingTab() {
   const groups = groupSales(r => r.leasing || "-");
+  renderSummaryCard('summaryCardLeasing', TARGET_DIVISI, groups);
   renderSalesSections('penjualanLeasingSections', groups, [{ key: 'cara', label: 'Cara Pembelian' }]);
 }
 
 function renderPenjualanAsuransiTab() {
   const groups = groupSales(r => r.asuransi);
+  renderSummaryCard('summaryCardAsuransi', TARGET_DIVISI, groups);
   renderSalesSections('penjualanAsuransiSections', groups, [{ key: 'leasing', label: 'Leasing' }]);
 }
 
