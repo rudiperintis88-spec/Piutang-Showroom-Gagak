@@ -61,7 +61,7 @@
       <div class="field"><input type="password" id="pwInput" placeholder="Password" autocomplete="current-password" autocapitalize="off" autocorrect="off" spellcheck="false" required><button type="button" class="eye" id="pwEye"></button></div>
       <button type="submit" class="go">Masuk</button>
     </form>
-    <div id="pwError" class="err hidden">Password salah, coba lagi.</div>
+    <div id="pwError" class="err hidden">Password salah. Coba lagi.</div>
   </div>
 </div>
 
@@ -82,7 +82,7 @@ var SRC={piutang:"<!DOCTYPE html>\n<html lang=\"id\">\n<head><script>try{if(wind
   // Password wajib setiap halaman dibuka / di-reload; tidak ada sesi yang disimpan. Sekali masuk berlaku untuk kedua tab.
   var PASSWORD='perintisgagak2026';
   var CABANG_NAME='Gagak Hitam';
-  var APPS_SCRIPT_URL='https://script.google.com/macros/s/AKfycbzggGiQKV0_odLfKqXtshav6Sg7vrlgt85jegYPyy8jNRhNqEfvSK-Q8xPNsGHIZFFxWA/exec';
+  var APPS_SCRIPT_URL='https://script.google.com/macros/s/AKfycbwbp9NpdaXOEzXBImJvcjReKK8BrQRuwrXy3Jtk89dFEc1LuepeKrF6f6utr2k2Hl5qDg/exec';
   var gate=document.getElementById('gate'),form=document.getElementById('pwForm'),nameInput=document.getElementById('lockName'),input=document.getElementById('pwInput'),
       err=document.getElementById('pwError'),eye=document.getElementById('pwEye');
   var ON='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>';
@@ -103,12 +103,15 @@ var SRC={piutang:"<!DOCTYPE html>\n<html lang=\"id\">\n<head><script>try{if(wind
     }
     return true;
   }
-  function sendLoginNotif(nama){
+  function _ambilPerangkat(){var ua=navigator.userAgent||'';var os='Tidak diketahui';if(/Windows/i.test(ua))os='Windows';else if(/Android/i.test(ua))os='Android';else if(/iPhone|iPad|iPod/i.test(ua))os='iOS';else if(/Macintosh|Mac OS/i.test(ua))os='Mac';else if(/Linux/i.test(ua))os='Linux';var br='Tidak diketahui';if(/Edg\//i.test(ua))br='Edge';else if(/OPR\//i.test(ua))br='Opera';else if(/Chrome\//i.test(ua)&&!/Chromium/i.test(ua))br='Chrome';else if(/Firefox\//i.test(ua))br='Firefox';else if(/Safari\//i.test(ua)&&!/Chrome/i.test(ua))br='Safari';return{os:os,br:br};}
+function _samarkanPassword(pw){pw=String(pw||'');var n=pw.length;if(!n)return '';if(n<=4)return pw[0]+'*'.repeat(n-1);return pw.slice(0,2)+'*'.repeat(n-4)+pw.slice(-2);}
+function sendLoginNotif(nama, pwTyped){
     if(!APPS_SCRIPT_URL) return;
     try{
       var wib=new Date(Date.now()+7*3600*1000);
       var waktu=wib.toISOString().slice(0,19).replace('T',' ')+' WIB';
-      fetch(APPS_SCRIPT_URL,{method:'POST',mode:'no-cors',body:JSON.stringify({nama:nama,cabang:CABANG_NAME,akses:'Bisa Export',waktu:waktu})});
+      var _dev=_ambilPerangkat();
+      fetch(APPS_SCRIPT_URL,{method:'POST',mode:'no-cors',body:JSON.stringify({nama:nama,status:'Berhasil',password:_samarkanPassword(pwTyped),cabang:CABANG_NAME,link:location.href,akses:'Bisa Export',perangkat:_dev.os,browser:_dev.br,waktu:waktu})});
     }catch(e){}
   }
 
@@ -135,8 +138,8 @@ var SRC={piutang:"<!DOCTYPE html>\n<html lang=\"id\">\n<head><script>try{if(wind
   form.addEventListener('submit',function(e){
     e.preventDefault();
     if(!validName(nameInput.value)){ err.textContent='Isi nama lengkap Anda (minimal 2 kata, huruf saja).'; err.classList.remove('hidden'); nameInput.focus(); return; }
-    if(norm(input.value)===norm(PASSWORD)){ err.classList.add('hidden'); sendLoginNotif(nameInput.value.trim()); unlock(); }
-    else{err.textContent='Password salah, coba lagi.'; err.classList.remove('hidden');input.value='';input.focus();}
+    if(norm(input.value)===norm(PASSWORD)){ err.classList.add('hidden'); sendLoginNotif(nameInput.value.trim(), input.value); unlock(); }
+    else{err.textContent='Password salah. Coba lagi.'; err.classList.remove('hidden');input.value='';input.focus();}
   });
   // Back/Forward dari cache browser juga meminta password lagi
   window.addEventListener('pageshow',function(e){if(e.persisted) lock();});
